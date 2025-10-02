@@ -1,45 +1,39 @@
 <% layout('layouts/bp') -%>
+
 <head>
   <title>All Listings</title>
 </head>
 
 <body>
   <h1>All Listings</h1>
-  <ul>
 
+  <div class="row row-cols-lg-3 row-cols-md-2 row-cols-sm-1 row-cols-xs-1">
     <% for(let Listing of allListings) { %>
-      <li>
-        <h2><a href="/listings/<%=Listing._id %>">
-            <%= Listing.title %>
-          </a></h2>
-        <% if (Listing.image && Listing.image.length> 0) { %>
-          <img src="<%= Listing.image[0].url %>" alt="Image for <%= Listing.title %>" width="200" />
-          <% } %>
+    <div class="col mb-4">
+      <a href="/listings/<%=Listing._id%>" class="card-link col">
+        <div class="card col">
+          <img
+            src="<%= Listing.image[0].url %>"
+            class="card-img-top"
+            style="height: 20rem"
+          />
+          <div class="card-img-overlay">
+            <p class="card-text">See more Info.</p>
+          </div>
+          <div class="card-body">
+            <h5 class="card-title">
+              <b> <%= Listing.title %></b>
+            </h5>
+            <p><%= Listing.description %></p>
             <p>
-              <%= Listing.description %>
+              Price: &nbsp;रु&nbsp;<%= Listing.price.toLocaleString("en-In")
+              %>/night
             </p>
-            <p>
-              Price: &nbsp;रु&nbsp; <%= Listing.price.toLocaleString("en-In") %>
-            </p>
-            <p>Location: <%= Listing.location %>, <%= Listing.country %>
-            </p>
-      </li>
-
-
-
-
-      <li>
-        <form method="get" action="/listings/<%= Listing._id %>/edit">
-          <button>Update the form</button>
-        </form>
-        
-        <form method="post" action="/listings/<%= Listing._id %>/delete?_method=delete">
-          <button>Delete the form</button>
-        </form>
-      </li>
-
-
-      <% }; %>
-  </ul>
+            <p>Location: <%= Listing.location %>, <%= Listing.country %></p>
+          </div>
+        </div>
+      </a>
+    </div>
+    <% }; %>
+  </div>
 </body>
-

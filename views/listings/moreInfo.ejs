@@ -14,5 +14,11 @@
     <p><strong>Price:</strong> <%= listing.price %></p>
     <p><strong>Location:</strong> <%= listing.location %>, <%= listing.country %></p>
     <a href="/listings">Back to Listings</a>
+    <form action="/listings/<%= listing._id %>/edit">
+        <button>Update</button>
+    </form>
+    <form action="/listings/<%= listing._id %>/delete?_method=delete">
+        <button>Delete</button>
+    </form>
 </body>
 </html>
