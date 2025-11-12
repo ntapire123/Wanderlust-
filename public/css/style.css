@@ -2,9 +2,18 @@ body {
     font-family: 'Plus Jakarta Sans', sans-serif;
 }
 
-/* Navbar */
+/* style.css */
+
 .navbar {
     height: 5rem;
+    background-color: #ffffff; /* Explicitly set a white background */
+}
+
+/* Styles the "WanderLust" brand link */
+.navbar-brand {
+    display: flex; /* Use flexbox for alignment */
+    align-items: center; /* Vertically center the icon and text */
+    gap: 0.5rem; /* Creates space between the icon and text */
 }
 
 .fa-compass {
@@ -12,8 +21,16 @@ body {
     font-size: 2rem;
 }
 
+/* General style for navigation links */
 .nav-link {
     color: #222222 !important;
+    font-weight: 500; /* Makes the font a little bolder */
+    transition: color 0.2s ease-in-out; /* Smooth transition for hover */
+}
+
+/* Add a hover effect for better user experience */
+.nav-link:hover {
+    color: #fe424d !important;
 }
 
 /* Footer */
