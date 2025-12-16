@@ -1,115 +1,85 @@
-
-//                      1. REQUIRES
-
+// 1. REQUIRES
 const express = require("express");
 const mongoose = require("mongoose");
 const path = require("path");
-const methodOverride = require('method-override');
+const methodOverride = require("method-override");
 const ejsmate = require("ejs-mate");
 const session = require("express-session");
-const flash = require('connect-flash');
+const flash = require("connect-flash");
 const passport = require("passport");
 const LocalStrategy = require("passport-local");
 
-// Models & Utils
 const User = require("./models/user.js");
 const ExpressError = require("./utils/ExpressError.js");
 
-// Routers
-const listingsRouter = require("./routes/listing.js"); 
+const listingsRouter = require("./routes/listing.js");
 const reviewsRouter = require("./routes/review.js");
 const userRouter = require("./routes/user.js");
 
-
-//                2. APP SETUP & DB CONNECTION
-
+// 2. APP SETUP & DB CONNECTION
 const app = express();
 const port = 3000;
 
-main().then(() => {
-    console.log("Connection to DB successful");
-}).catch((err) => {
-    console.log("DB connection error:", err);
-});
+main()
+  .then(() => console.log("Connection to DB successful"))
+  .catch((err) => console.log("DB connection error:", err));
 
 async function main() {
-    await mongoose.connect('mongodb://127.0.0.1:27017/wanderLust');
+  await mongoose.connect("mongodb://127.0.0.1:27017/wanderLust");
 }
 
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 app.engine("ejs", ejsmate);
 
-
-//                      3. MIDDLEWARE
-
-// This section MUST be in the correct order
+// 3. MIDDLEWARE
 app.use(express.static(path.join(__dirname, "/public")));
 app.use(express.urlencoded({ extended: true }));
-app.use(methodOverride('_method'));
+app.use(methodOverride("_method"));
 
 const sessionOptions = {
-    secret: "mysupersecretcode",
-    resave: false,
-    saveUninitialized: true, // Note: For production, consider setting this to false
-    cookie: {
-        expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-        maxAge: 7 * 24 * 60 * 60 * 1000,
-        httpOnly: true,
-    }
+  secret: "mysupersecretcode",
+  resave: false,
+  saveUninitialized: true,
+  cookie: {
+    expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+    httpOnly: true,
+  },
 };
 
-// 1. Session middleware is first
 app.use(session(sessionOptions));
 app.use(flash());
 
-
-
-// 2. Passport middleware
-
 app.use(passport.initialize());
 app.use(passport.session());
-
-// 3. Passport Local Mongoose Strategy Setup
-passport.use(User.createStrategy());
+passport.use(new LocalStrategy(User.authenticate()));
 passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
 
-// 4. Global variables middleware (Flash messages & Current User)
 app.use((req, res, next) => {
-    res.locals.success = req.flash("success");
-    res.locals.error = req.flash("error");
-    res.locals.currUser = req.user; // Using standard 'currentUser' name
-    next();
+  res.locals.success = req.flash("success");
+  res.locals.error = req.flash("error");
+  res.locals.currUser = req.user;
+  next();
 });
 
-
-//                         4. ROUTES
-
-// Routes must come AFTER all the core middleware setup
-app.use("/listings/:id/reviews", reviewsRouter);
+// 4. ROUTES
 app.use("/listings", listingsRouter);
+app.use("/listings/:id/reviews", reviewsRouter);
 app.use("/", userRouter);
 
-
-//                      5. ERROR HANDLERS
-
-
-// 404 Not Found Middleware (catches any request that didn't match a route)
+// 5. ERROR HANDLERS
 app.all("*", (req, res, next) => {
-    next(new ExpressError(404, "Page Not Found!"));
+  next(new ExpressError(404, "Page Not Found!"));
 });
 
-// General Error Handling Middleware (catches errors passed by `next(err)`)
 app.use((err, req, res, next) => {
-    let { status = 500, message = "Something went wrong" } = err;
-    res.status(status).render("errors/err1.ejs", { message });
+  let { status = 500, message = "Something went wrong" } = err;
+  res.status(status).render("errors/err1.ejs", { message });
 });
 
-
-//                  6. START THE SERVER
-
-// This must be the VERY LAST thing in the file
+// 6. START THE SERVER
 app.listen(port, () => {
-    console.log(`Server is listening on port ${port}`);
+  console.log(`Server is listening on port ${port}`);
 });
