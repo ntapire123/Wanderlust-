@@ -12,7 +12,7 @@ cloudinary.v2.config({
 const storage = cloudinaryStorage({
   cloudinary,
   params: {
-    folder: "Wanderlust",
+    folder: "HitiTrails",
     allowed_formats: ["jpeg", "jpg", "png"],
   },
 });

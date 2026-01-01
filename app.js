@@ -21,6 +21,9 @@ const listingsRouter = require("./routes/listing.js");
 const reviewsRouter = require("./routes/review.js");
 const userRouter = require("./routes/user.js");
 
+
+
+
 // 2. APP SETUP & DB CONNECTION
 const app = express();
 const port = process.env.PORT || 3000;
@@ -70,6 +73,8 @@ app.use((req, res, next) => {
   res.locals.currUser = req.user;
   next();
 });
+
+
 
 // 4. ROUTES
 app.use("/listings", listingsRouter);

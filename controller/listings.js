@@ -1,81 +1,178 @@
 const Listing = require("../models/listing");
 const ExpressError = require("../utils/ExpressError");
 const { cloudinary } = require("../cloudConfig");
+const maptilerClient = require('@maptiler/client');
+maptilerClient.config.apiKey = process.env.MAP_TOKEN;
 
-module.exports.index = async (req, res) => {
-  const allListings = await Listing.find({});
-  res.render("listings/index.ejs", { allListings });
+
+module.exports.index = async (req, res, next) => {
+  try {
+    const allListings = await Listing.find({});
+    res.render("listings/index.ejs", { allListings });
+  } catch (err) {
+    next(err);
+  }
 };
 
 module.exports.renderNewFrom = (req, res) => {
   res.render("listings/newList.ejs");
 };
 
-module.exports.showListing = async (req, res) => {
-  let { id } = req.params;
-  const listing = await Listing.findById(id)
-    .populate({
-      path: "reviews",
-      populate: { path: "author" },
-    })
-    .populate("owner");
-  if (!listing) {
-    throw new ExpressError(404, "Listing Not Found!");
-  }
-  res.render("listings/moreInfo.ejs", { listing, currUser: req.user });
-};
-
-module.exports.addNewListing = async (req, res) => {
-
-  
-  if (!req.file) {
-    throw new ExpressError(400, "Image upload required!");
-  }
-  
-  const newListing = new Listing(req.body.listing);
-  newListing.owner = req.user._id;
-  newListing.image = { 
-    url: req.file.secure_url, 
-    filename: req.file.filename 
-  };
-  await newListing.save();
-  req.flash("success", "New listing created!");
-  res.redirect("/listings");
-};
-
-module.exports.renderEditForm = async (req, res) => {
-  let { id } = req.params;
-  const listing = await Listing.findById(id);
-
-  if (!listing) {
-   req.flash("error", "Listing Not Found!");
-   return res.redirect("/listings");
-  }
-
-  let originalImageUrl = listing.image.url;
-   originalImageUrl = originalImageUrl.replace("/upload/", "/upload/w_250,h_200,c_fill/");
-  res.render("listings/update.ejs", { listing , originalImageUrl });
-};
-
-module.exports.updateListing = async (req, res) => {
-  let { id } = req.params;
-    let listing =  await Listing.findByIdAndUpdate(id, { ...req.body.listing });
-
-    if ( typeof req.file !== "undefined") {
-   let url = req.file.secure_url;
-  let filename = req.file.filename;
-  listing.image = { url, filename };
-  await listing.save();
+module.exports.showListing = async (req, res, next) => {
+  try {
+    let { id } = req.params;
+    const listing = await Listing.findById(id)
+      .populate({
+        path: "reviews",
+        populate: { path: "author" },
+      })
+      .populate("owner");
+    if (!listing) {
+      throw new ExpressError(404, "Listing Not Found!");
     }
 
+    // Geocode location if we don't have coordinates
+    let coordinates = listing.geometry?.coordinates || [0, 0];
+    if ((coordinates[0] === 0 && coordinates[1] === 0) && listing.location) {
+      try {
+        const geoResults = await maptilerClient.geocoding.forward(listing.location);
+        if (geoResults.features && geoResults.features.length > 0) {
+          coordinates = geoResults.features[0].geometry.coordinates;
+          // Update the listing with geocoded coordinates
+          listing.geometry = {
+            type: 'Point',
+            coordinates: coordinates
+          };
+          await listing.save();
+        }
+      } catch (geoErr) {
+        console.log("Geocoding error:", geoErr);
+      }
+    }
 
-  req.flash("success", "Listing Updated!");
-  res.redirect(`/listings/${id}`);
+    res.render("listings/moreInfo.ejs", { listing, currUser: req.user, coordinates });
+  } catch (err) {
+    next(err);
+  }
 };
 
-module.exports.deleteListing = async (req, res) => {
-  let { id } = req.params;
-  await Listing.findByIdAndDelete(id);
-  req.flash("success", "Listing Deleted!");
-  res.redirect("/listings");
+module.exports.addNewListing = async (req, res, next) => {
+  try {
+    console.log('addNewListing: start');
+    if (!req.file) {
+      console.log('addNewListing: missing req.file');
+      throw new ExpressError(400, "Image upload required!");
+    }
+
+    console.log('addNewListing: creating Listing object');
+    const newListing = new Listing(req.body.listing);
+    newListing.owner = req.user._id;
+    newListing.image = { 
+      url: req.file.secure_url, 
+      filename: req.file.filename 
+    };
+
+    // Geocode the location
+    if (newListing.location) {
+      try {
+        const geoResults = await maptilerClient.geocoding.forward(newListing.location);
+        if (geoResults.features && geoResults.features.length > 0) {
+          const coordinates = geoResults.features[0].geometry.coordinates;
+          newListing.geometry = {
+            type: 'Point',
+            coordinates: coordinates
+          };
+          console.log('addNewListing: geocoded to', coordinates);
+        }
+      } catch (geoErr) {
+        console.log('addNewListing: geocoding error', geoErr.message);
+      }
+    }
+
+    console.log('addNewListing: before save');
+    await newListing.save();
+    console.log('addNewListing: after save');
+    req.flash("success", "New listing created!");
+    res.redirect("/listings");
+  } catch (err) {
+    console.error('addNewListing: error', err && err.message);
+    next(err);
+  }
+};
+
+module.exports.renderEditForm = async (req, res, next) => {
+  try {
+    let { id } = req.params;
+    const listing = await Listing.findById(id);
+
+    if (!listing) {
+      throw new ExpressError(404, "Listing Not Found!");
+    }
+
+    let originalImageUrl = listing.image.url;
+    originalImageUrl = originalImageUrl.replace("/upload/", "/upload/w_250,h_200,c_fill/");
+    res.render("listings/update.ejs", { listing, originalImageUrl });
+  } catch (err) {
+    next(err);
+  }
+};
+
+module.exports.updateListing = async (req, res, next) => {
+  try {
+    let { id } = req.params;
+    console.log('updateListing: start', id);
+    let listing = await Listing.findById(id);
+    console.log('updateListing: fetched listing');
+
+    if (!listing) {
+      throw new ExpressError(404, "Listing Not Found!");
+    }
+
+    // Update listing data
+    Object.assign(listing, req.body.listing);
+
+    // Geocode the location if it was updated
+    if (req.body.listing.location) {
+      try {
+        const geoResults = await maptilerClient.geocoding.forward(req.body.listing.location);
+        if (geoResults.features && geoResults.features.length > 0) {
+          const coordinates = geoResults.features[0].geometry.coordinates;
+          listing.geometry = {
+            type: 'Point',
+            coordinates: coordinates
+          };
+          console.log('updateListing: geocoded to', coordinates);
+        }
+      } catch (geoErr) {
+        console.log('updateListing: geocoding error', geoErr.message);
+      }
+    }
+
+    // Update image if provided
+    if (typeof req.file !== "undefined") {
+      let url = req.file.secure_url;
+      let filename = req.file.filename;
+      listing.image = { url, filename };
+    }
+
+    console.log('updateListing: before save');
+    await listing.save();
+    console.log('updateListing: after save');
+    req.flash("success", "Listing Updated!");
+    res.redirect(`/listings/${id}`);
+  } catch (err) {
+    console.error('updateListing: error', err && err.message);
+    next(err);
+  }
+};
+
+module.exports.deleteListing = async (req, res, next) => {
+  try {
+    let { id } = req.params;
+    await Listing.findByIdAndDelete(id);
+    req.flash("success", "Listing Deleted!");
+    res.redirect("/listings");
+  } catch (err) {
+    next(err);
+  }
 };

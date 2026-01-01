@@ -14,7 +14,7 @@ module.exports.signup = async (req, res, next) => {
       if (err) {
         return next(err);
       }
-      req.flash("success", "Welcome to Wanderlust!");
+      req.flash("success", "Welcome to HitiTrails!");
       res.redirect("/listings");
     });
   } catch (e) {

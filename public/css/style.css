@@ -9,7 +9,7 @@ body {
     background-color: #ffffff; /* Explicitly set a white background */
 }
 
-/* Styles the "WanderLust" brand link */
+/* Styles the "HitiTrails" brand link */
 .navbar-brand {
     display: flex; /* Use flexbox for alignment */
     align-items: center; /* Vertically center the icon and text */
@@ -110,4 +110,11 @@ body {
 
 .show-card {
     padding: 0;
+}
+
+/* map */
+#map {
+  height: 400px;
+  width: 60%;
+  margin-bottom: 2px;
 }

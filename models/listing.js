@@ -27,6 +27,17 @@ const listingSchema = new Schema({
             ref: "User",
         }
     ,
+    geometry: {
+      type: {
+        type: String,
+        enum: ['Point'],
+        default: 'Point'
+      },
+      coordinates: {
+        type: [Number],
+        default: [0, 0]
+      }
+    }
 });
 
 // Mongoose middleware to delete all associated reviews when a listing is deleted

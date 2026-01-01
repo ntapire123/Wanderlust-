@@ -92,6 +92,9 @@
 
     <% } %>
     <hr />
+
+
+      <% if(listing.reviews.length > 0) { %>
     <p><b>All Reviews:</b></p>
     <div class="row">
       <% for(let review of listing.reviews) { %>
@@ -109,7 +112,16 @@
           </form>
         </div>
       </div>
+      <% } %> 
       <% } %>
+    </div>
+
+      <div id="map" class="col-8 offset-2 mb-3" 
+           data-token="<%= process.env.MAP_TOKEN %>" 
+           data-coordinates='<%= JSON.stringify(listing.geometry?.coordinates || [0, 0]) %>'>
+      <h3>Where Will you be</h3>
+      <noscript>Please enable JavaScript to view the map.</noscript>
+      <script src="/js/map.js"></script>
     </div>
   </div>
 </div>

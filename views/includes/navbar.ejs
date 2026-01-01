@@ -1,16 +1,20 @@
 <nav class="navbar navbar-expand-md navbar-light bg-light border-bottom sticky-top">
     <div class="container-fluid">
-        <a class="navbar-brand" href="/listings"><i class="fa-solid fa-compass"></i> WanderLust</a>
+        <% const logoSrc = 'https://res.cloudinary.com/duv7frgnx/image/upload/v1766581278/logo_xv5gfp.jpg'; %>
+        <a class="navbar-brand d-flex align-items-center" href="/listings">
+            <img src="<%= logoSrc %>" alt="HitiTrails logo" style="height:32px; width:auto; margin-right:8px;">
+            HitiTrails
+        </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
             <div class="navbar-nav">
                 <a class="nav-link" href="/listings">Explore</a>
-                <a class="nav-link" href="/listings/new">Add New Listing</a>
+       
             </div>
             <div class="navbar-nav ms-auto">
-
+                <a class="nav-link" href="/listings/new">Add New Listing</a>
                 <%if(!currUser){%>
                 <a class="nav-link" href="/signup">Signup</a>
                 <a class="nav-link" href="/login">Login</a>
