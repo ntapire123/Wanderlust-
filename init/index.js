@@ -1,23 +1,40 @@
 const mongoose = require("mongoose");
+const Listing = require("../models/listing.js");
+const User = require("../models/user.js");
 const initData = require("./data.js");
 
-const Listing = require("../models/listing.js");
-
-main().then((result)=>{
-    console.log("Connection success");
-}).catch((err)=>{
-    console.log("some error happened")
-})
-
 async function main() {
-   await mongoose.connect('mongodb://127.0.0.1:27017/wanderLust');
+  await mongoose.connect("mongodb://127.0.0.1:27017/wanderLust");
 }
 
-const initDb = async()=>{
-    await Listing.deleteMany({});
-    initData.data = initData.data.map((obj)=>({...obj  , owner: "6915e6b37169852cc4164c0b"}))
-    await Listing.insertMany(initData.data);
-    console.log("The data was initalized");
+async function getOrCreateDemoUser() {
+  let demo = await User.findOne({ username: "demo" });
+  if (!demo) {
+    // passport-local-mongoose provides .register()
+    demo = await User.register(new User({ username: "demo", email: "demo@demo.com" }), "demopassword");
+  }
+  return demo;
 }
 
-initDb();
+async function initDB() {
+  await Listing.deleteMany({}); // delete old listings [web:78]
+
+  const demoUser = await getOrCreateDemoUser();
+
+  // Add demo as owner to every listing
+  const listingsWithOwner = initData.data.map((l) => ({
+    ...l,
+    owner: demoUser._id,
+  }));
+
+  await Listing.insertMany(listingsWithOwner); // insert new listings [web:78]
+  console.log("DB seeded. Demo is owner of all listings.");
+  process.exit();
+}
+
+main()
+  .then(initDB)
+  .catch((err) => {
+    console.log(err);
+    process.exit(1);
+  });

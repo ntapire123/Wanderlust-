@@ -7,11 +7,37 @@ maptilerClient.config.apiKey = process.env.MAP_TOKEN;
 
 module.exports.index = async (req, res, next) => {
   try {
-    const allListings = await Listing.find({});
-    res.render("listings/index.ejs", { allListings });
+const { category, q } = req.query; // /listings?category=mountains  [web:77]
+  let filter = {};
+
+  // Trending = home page = show all listings
+  if (category && category.toLowerCase() !== "trending") {
+    filter.category = category.toLowerCase(); // matches your enum values [web:91]
+  }
+
+
+
+
+  // text search filter on title, country, location (case-insensitive)
+    if (q && q.trim() !== "") {
+      const regex = new RegExp(q.trim(), "i");
+      filter.$or = [
+        { title: regex },
+        { country: regex },
+        { location: regex },
+      ];
+    }
+
+
+
+  const allListings = await Listing.find(filter);
+  res.render("listings/index.ejs", { allListings, category: category || "trending" });
   } catch (err) {
     next(err);
   }
+
+  
+  
 };
 
 module.exports.renderNewFrom = (req, res) => {

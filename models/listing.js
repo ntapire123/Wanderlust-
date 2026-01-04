@@ -7,6 +7,11 @@ const listingSchema = new Schema({
         type: String,
         required: true,
     },
+     category: { 
+        type: String, enum: ['trending', 'mountains', 'beaches', 'international','city'] 
+    
+    
+    },
     description: String,
     image: {
         url: String,

@@ -1,19 +1,290 @@
-<% layout("/layouts/bp") %>
+ <% layout("/layouts/bp") %>
 
-<h3>All Listings</h3>
-<div class="row row-cols-lg-3 row-cols-md-2 row-cols-sm-1">
-    <% for(let listing of allListings) { %>
-        <a href="/listings/<%= listing._id %>" class="listing-link">
-            <div class="card col listing-card">
-                <img src="<%= listing.image.url %>" class="card-img-top" alt="listing_image" style="height: 20rem;">
-                <div class="card-img-overlay"></div>
-                <div class="card-body">
-                    <p class="card-text">
-                        <b><%= listing.title %></b> <br>
-                        &#8377; <%= listing.price.toLocaleString("en-IN") %> / night
-                    </p>
-                </div>
-            </div>
-        </a>
-    <% } %>
+<style>
+#filters {
+  position: sticky;      /* stays at top while scrolling */
+  top: 70px;             /* adjust to your navbar height */
+  z-index: 50;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* toggle on left, pills on right */
+  gap: 32px;
+
+  max-width: 95%;
+  margin: 20px auto;
+  padding: 16px 24px;
+  background: #ffffff;
+  border-radius: 999px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+
+  transition:
+    padding 0.25s ease,
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    border-radius 0.25s ease;
+}
+
+
+.filters-left {
+  display: flex;
+  align-items: center;
+}
+
+.filters-right {
+  display: flex;
+  gap: 20px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.filters-right::-webkit-scrollbar {
+  display: none;
+}
+
+.filter-pill {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #555;
+  cursor: pointer;
+  transition: transform 0.2s ease,
+              box-shadow 0.2s ease,
+              border-color 0.2s ease,
+              color 0.2s ease,
+              background-color 0.2s ease;
+}
+
+.filter-pill i {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #555;
+  cursor: pointer;
+  transition:
+    transform 0.2s ease-out,
+    box-shadow 0.2s ease-out,
+    border-color 0.2s ease-out,
+    color 0.2s ease-out,
+    background-color 0.2s ease-out;
+}
+
+.filter-pill span {
+  font-size: 12px;
+  white-space: nowrap;
+}
+.filter-pill {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #555;
+  cursor: pointer;
+  transition:
+    transform 0.2s ease-out,
+    box-shadow 0.2s ease-out,
+    border-color 0.2s ease-out,
+    color 0.2s ease-out,
+    background-color 0.2s ease-out;
+}
+
+.filter-pill i {
+  font-size: 20px;
+  transition:
+    transform 0.2s ease-out,
+    color 0.2s ease-out;
+}
+
+/* hover + active state */
+.filter-pill:hover {
+  transform: translateY(-3px);
+  border-color: #000;
+  background: #f7f7f7;
+  color: #000;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+}
+
+.filter-pill:hover i {
+  transform: scale(1.08);
+  color: #ff385c; /* Airbnb-like accent */
+}
+
+.filter-pill.active {
+  border-color: #000;
+  background: #f7f7f7;
+  color: #000;
+}
+
+/* shrunk state */
+#filters.shrunk {
+  padding: 8px 18px;
+  transform: scale(0.9);
+  border-radius: 32px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+}
+
+#filters.shrunk .filter-pill i {
+  font-size: 16px;
+}
+
+#filters.shrunk .filter-pill span {
+  font-size: 11px;
+}
+
+</style>
+
+<div id="filters">
+  <!-- Category filters -->
+  <button class="filter-pill <%= (category === 'trending') ? 'active' : '' %>"
+          data-category="trending">
+    <i class="fa-solid fa-fire"></i>
+    <span>Trending</span>
+  </button>
+
+  <button class="filter-pill <%= (category === 'mountains') ? 'active' : '' %>"
+          data-category="mountains">
+    <i class="fa-solid fa-mountain"></i>
+    <span>Mountains</span>
+  </button>
+
+  <button class="filter-pill <%= (category === 'international') ? 'active' : '' %>"
+          data-category="international">
+    <i class="fa-solid fa-plane"></i>
+    <span>International</span>
+  </button>
+
+  <button class="filter-pill <%= (category === 'city') ? 'active' : '' %>"
+          data-category="city">
+    <i class="fa-solid fa-city"></i>
+    <span>City</span>
+  </button>
+
+
+    <!-- Tax toggle -->
+  <div class="form-check form-switch">
+    <input
+      class="form-check-input"
+      type="checkbox"
+      role="switch"
+      id="flexSwitchCheckChecked"
+      checked
+    />
+    <label class="form-check-label" for="flexSwitchCheckChecked">
+      Add taxes and show information
+    </label>
+  </div>
 </div>
+
+<div class="row row-cols-lg-3 row-cols-md-2 row-cols-sm-1 mt-3">
+  <% for (let listing of allListings) { %>
+    <a href="/listings/<%= listing._id %>" class="listing-link">
+      <div class="card col listing-card">
+        <img
+          src="<%= listing.image.url %>"
+          class="card-img-top"
+          alt="listing_image"
+          style="height: 20rem"
+        />
+        <div class="card-img-overlay"></div>
+        <div class="card-body">
+          <p class="card-text">
+            <b><%= listing.title %></b> <br />
+            &#8377;
+            <span
+              class="listing-price"
+              data-base-price="<%= listing.price %>"
+            >
+              <%= listing.price.toLocaleString("en-IN") %>
+            </span>
+            / night
+          </p>
+        </div>
+      </div>
+    </a>
+  <% } %>
+</div>
+
+<script>
+  // CATEGORY FILTER
+  document.querySelectorAll(".filter-pill").forEach((el) => {
+    el.addEventListener("click", () => {
+      const category = el.dataset.category;
+
+      if (!category || category === "trending") {
+        window.location.href = "/listings";
+      } else {
+        window.location.href = `/listings?category=${encodeURIComponent(
+          category
+        )}`;
+      }
+    });
+  });
+
+
+  (function setActiveFromServer() {
+    const current = "<%= category %>";
+    document.querySelectorAll(".filter-pill").forEach((el) => {
+      if (el.dataset.category === current) {
+        el.classList.add("active");
+      } else if (current === "trending" && el.dataset.category === "trending") {
+        el.classList.add("active");
+      }
+    });
+  })();
+
+  // SHRINK FILTER BAR ON SCROLL
+  const filtersBar = document.getElementById("filters");
+  function updateBarSize() {
+    const shrink = window.scrollY > 40;
+    filtersBar.classList.toggle("shrunk", shrink);
+  }
+  window.addEventListener("scroll", updateBarSize);
+  updateBarSize();
+
+  // TAX TOGGLE
+  const taxSwitch = document.getElementById("flexSwitchCheckChecked");
+  const priceEls = document.querySelectorAll(".listing-price");
+  const TAX_RATE = 0.15; // 15%
+
+  function formatINR(num) {
+    return num.toLocaleString("en-IN");
+  }
+
+  function applyTax(showTax) {
+    priceEls.forEach((el) => {
+      const base = Number(el.dataset.basePrice);
+      if (isNaN(base)) return;
+
+      if (showTax) {
+        const taxed = Math.round(base * (1 + TAX_RATE));
+        el.textContent = formatINR(taxed) + " (incl. tax)";
+      } else {
+        el.textContent = formatINR(base);
+      }
+    });
+  }
+
+  
+  applyTax(taxSwitch.checked);
+
+  taxSwitch.addEventListener("change", () => {
+    applyTax(taxSwitch.checked);
+  });
+</script>
