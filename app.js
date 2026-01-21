@@ -32,6 +32,15 @@ if (!DBURL) {
 const app = express();
 const port = process.env.PORT || 3000;
 
+// Render debugging
+console.log('=== RENDER DEBUG ===');
+console.log('NODE_ENV:', process.env.NODE_ENV);
+console.log('PORT:', port);
+console.log('RENDER:', process.env.RENDER);
+console.log('ATLASDB_URL exists:', !!process.env.ATLASDB_URL);
+console.log('SECRET exists:', !!process.env.SECRET);
+console.log('==================');
+
 // 3. DB CONNECTION
 async function main() {
   await mongoose.connect(DBURL);
@@ -80,7 +89,7 @@ const sessionOptions = {
   cookie: {
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production", // Only send over HTTPS in production
+    secure: process.env.NODE_ENV === "production" && process.env.RENDER !== "true", // Allow non-HTTPS on Render
     sameSite: "lax", // CSRF protection
   },
 };
