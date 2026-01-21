@@ -32,15 +32,6 @@ if (!DBURL) {
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Render debugging
-console.log('=== RENDER DEBUG ===');
-console.log('NODE_ENV:', process.env.NODE_ENV);
-console.log('PORT:', port);
-console.log('RENDER:', process.env.RENDER);
-console.log('ATLASDB_URL exists:', !!process.env.ATLASDB_URL);
-console.log('SECRET exists:', !!process.env.SECRET);
-console.log('==================');
-
 // 3. DB CONNECTION
 async function main() {
   await mongoose.connect(DBURL);
